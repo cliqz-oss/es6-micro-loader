@@ -52,7 +52,7 @@ function has(name) {
 
 function createScriptNode(src, callback) {
   try {
-    Services.scriptloader.loadSubScript(src, exports);
+    Services.scriptloader.loadSubScript(src, exports, "UTF-8");
     callback();
   } catch(err) {
     callback(err);
