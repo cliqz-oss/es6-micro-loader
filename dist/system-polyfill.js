@@ -1,9 +1,7 @@
 (function(exports) {
-
 'use strict';
 
-var headEl = document.getElementsByTagName('head')[0],
-    ie = /MSIE/.test(navigator.userAgent);
+var ie = false;
 
 /*
   normalizeName() is inspired by Ember's loader:
@@ -53,24 +51,12 @@ function has(name) {
 }
 
 function createScriptNode(src, callback) {
-    var node = document.createElement('script');
-    // use async=false for ordered async?
-    // parallel-load-serial-execute http://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
-    if (node.async) {
-        node.async = false;
-    }
-    if (ie) {
-        node.onreadystatechange = function() {
-            if (/loaded|complete/.test(this.readyState)) {
-                this.onreadystatechange = null;
-                callback();
-            }
-        };
-    } else {
-        node.onload = node.onerror = callback;
-    }
-    node.setAttribute('src', src);
-    headEl.appendChild(node);
+  try {
+    Services.scriptloader.loadSubScript(src, exports);
+    callback();
+  } catch(err) {
+    callback(err);
+  }
 }
 
 function load(name) {
@@ -105,8 +91,8 @@ var System = {
             var normalizedName = normalizeName(name, []);
             var mod = get(normalizedName);
             return mod ? resolve(mod) : load(name).then(function () {
-                return get(normalizedName);
-            });
+                resolve(get(normalizedName));
+            }).catch(reject);
         });
     },
     register: function(name, deps, wrapper) {
@@ -177,4 +163,4 @@ var System = {
 // exporting the System object
 exports.System = System;
 
-})(window);
+})(this);
