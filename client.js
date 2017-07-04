@@ -152,7 +152,17 @@ var System = {
             }
         };
         // collecting execute() and setters[]
-        meta = wrapper(function(identifier, value) {
+        meta = wrapper(function loadDep(identifier, value) {
+            if (typeof identifier === "object") {
+              return Object.keys(identifier).map(function (k) {
+                var v = identifier[k];
+                loadDep(k, v);
+                return [k, v]
+              }).reduce(function (hash, el) {
+                hash[el[0]] = el[1];
+                return hash;
+              }, Object.create(null));
+            }
             values[identifier] = value;
             mod.lock = true; // locking down the updates on the module to avoid infinite loop
             mod.dependants.forEach(function(moduleName) {
